@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LabToolKit</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">LabToolKit</p>
+      <h1>LabToolKit: mobile-friendly tools for wet lab experiments</h1>
+      <p class="subhead">
+        Calculate molarity, look up molecular weights, and build master mixes without opening a laptop.
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <section class="tool" id="molarity-tool">
+      <div class="tool-header">
+        <h2>Molarity calculator</h2>
+        <p>
+          Enter any two of the three quantities (moles, mass, molar weight) to calculate the third.
+          Molar weight in daltons is equivalent to g/mol.
+        </p>
+      </div>
+
+      <div class="card grid-two">
+        <div>
+          <h3>Moles</h3>
+          <div class="field-group">
+            <label for="moles-mol">mol</label>
+            <input id="moles-mol" type="number" step="any" placeholder="e.g., 0.25" />
+          </div>
+          <div class="field-group">
+            <label for="moles-mmol">mmol</label>
+            <input id="moles-mmol" type="number" step="any" placeholder="e.g., 250" />
+          </div>
+          <div class="field-group">
+            <label for="moles-umol">µmol</label>
+            <input id="moles-umol" type="number" step="any" placeholder="e.g., 250000" />
+          </div>
+        </div>
+
+        <div>
+          <h3>Mass</h3>
+          <div class="field-group">
+            <label for="mass-g">g</label>
+            <input id="mass-g" type="number" step="any" placeholder="e.g., 14.6" />
+          </div>
+          <div class="field-group">
+            <label for="mass-mg">mg</label>
+            <input id="mass-mg" type="number" step="any" placeholder="e.g., 14600" />
+          </div>
+          <div class="field-group">
+            <label for="mass-ug">µg</label>
+            <input id="mass-ug" type="number" step="any" placeholder="e.g., 14600000" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field-group">
+          <label for="molar-weight">Molar weight (Da / g·mol⁻¹)</label>
+          <input id="molar-weight" type="number" step="any" placeholder="e.g., 58.44" />
+        </div>
+        <div class="button-row">
+          <button id="molarity-calc" type="button">Calculate</button>
+          <button id="molarity-clear" type="button" class="ghost">Clear</button>
+        </div>
+        <p id="molarity-status" class="status"></p>
+      </div>
+
+      <div class="card">
+        <h3>Molar weight search (PubChem)</h3>
+        <p class="muted">
+          Search PubChem, a comprehensive chemical database maintained by the NIH, for molecular weight.
+        </p>
+        <div class="field-group inline">
+          <input id="pubchem-query" type="text" placeholder="Search by name (e.g., sodium chloride)" />
+          <button id="pubchem-search" type="button">Search</button>
+        </div>
+        <p id="pubchem-result" class="status"></p>
+        <a id="pubchem-link" class="link" href="#" target="_blank" rel="noopener">Open PubChem record</a>
+      </div>
+
+      <div class="card">
+        <h3>Voice search &amp; ask</h3>
+        <p class="muted">
+          Use voice to ask for a molar weight or a quick conversion (e.g., “How many micrograms of sodium chloride equal one mole?”).
+        </p>
+        <div class="button-row">
+          <button id="voice-start" type="button">Start voice input</button>
+          <button id="voice-stop" type="button" class="ghost">Stop</button>
+        </div>
+        <p id="voice-status" class="status"></p>
+      </div>
+    </section>
+
+    <section class="tool" id="master-mix-tool">
+      <div class="tool-header">
+        <h2>Master mix calculator</h2>
+        <p>
+          Add components with a stock concentration, and either final concentration or dilution factor.
+          The calculator returns per-component volumes and the buffer volume needed for your total mix.
+        </p>
+      </div>
+
+      <div class="card grid-two">
+        <div class="field-group">
+          <label for="reaction-volume">Final volume per reaction (µL)</label>
+          <input id="reaction-volume" type="number" step="any" placeholder="e.g., 20" />
+        </div>
+        <div class="field-group">
+          <label for="reaction-count">Number of reactions</label>
+          <input id="reaction-count" type="number" step="1" placeholder="e.g., 24" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field-group">
+          <label for="buffer-name">Buffer name</label>
+          <input id="buffer-name" type="text" placeholder="e.g., nuclease-free water" />
+        </div>
+        <p class="muted">
+          Buffer volume is calculated as the remaining volume after components are added.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="component-header">
+          <h3>Components</h3>
+          <button id="add-component" type="button" class="ghost">Add component</button>
+        </div>
+        <div id="components"></div>
+      </div>
+
+      <div class="card">
+        <div class="button-row">
+          <button id="mix-calc" type="button">Calculate master mix</button>
+          <button id="mix-clear" type="button" class="ghost">Clear</button>
+        </div>
+        <p id="mix-status" class="status"></p>
+        <div id="mix-results"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>LabToolKit is designed for quick reference at the bench. Always verify calculations for critical experiments.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
