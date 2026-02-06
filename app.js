@@ -25,12 +25,17 @@ const voiceStatus = document.getElementById("voice-status");
 const reactionVolumeInput = document.getElementById("reaction-volume");
 const reactionCountInput = document.getElementById("reaction-count");
 const bufferNameInput = document.getElementById("buffer-name");
+const totalVolumeDisplay = document.getElementById("total-volume");
 const addComponentButton = document.getElementById("add-component");
 const componentsContainer = document.getElementById("components");
 const mixCalcButton = document.getElementById("mix-calc");
 const mixClearButton = document.getElementById("mix-clear");
 const mixStatus = document.getElementById("mix-status");
 const mixResults = document.getElementById("mix-results");
+const appSelector = document.getElementById("app-selector");
+const toolSections = document.querySelectorAll(".tool");
+const appCards = document.querySelectorAll(".app-card");
+const backButtons = document.querySelectorAll("[data-back]");
 
 const unitFactors = {
   mol: 1,
@@ -162,14 +167,46 @@ const clearMolarity = () => {
 
 const pubchemLookup = async (query) => {
   const response = await fetch(
-    `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(query)}/property/MolecularWeight,Title/JSON`
+    `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(query)}/property/MolecularWeight,Title,IsomericSMILES/JSON`
   );
   if (!response.ok) {
     throw new Error("PubChem lookup failed");
   }
   const data = await response.json();
   const record = data?.PropertyTable?.Properties?.[0];
-  return record;
+  if (!record) {
+    return null;
+  }
+  return { title: record.Title, weight: record.MolecularWeight, source: "PubChem", cid: record.CID };
+};
+
+const cactusLookup = async (query) => {
+  const response = await fetch(
+    `https://cactus.nci.nih.gov/chemical/structure/${encodeURIComponent(query)}/mw`
+  );
+  if (!response.ok) {
+    throw new Error("Cactus lookup failed");
+  }
+  const text = await response.text();
+  const weight = parseFloat(text);
+  if (!Number.isFinite(weight)) {
+    return null;
+  }
+  return { title: query, weight, source: "NCI Cactus" };
+};
+
+const lookupMolecularWeight = async (query) => {
+  try {
+    const pubchem = await pubchemLookup(query);
+    if (pubchem) {
+      return pubchem;
+    }
+  } catch (error) {
+    // Continue to fallback.
+  }
+
+  const cactus = await cactusLookup(query);
+  return cactus;
 };
 
 const handlePubchemSearch = async () => {
@@ -184,17 +221,24 @@ const handlePubchemSearch = async () => {
   pubchemLink.textContent = "Open PubChem search";
 
   try {
-    const record = await pubchemLookup(query);
+    const record = await lookupMolecularWeight(query);
     if (!record) {
       pubchemResult.textContent = "No results found. Try a different name.";
       return;
     }
-    pubchemResult.textContent = `${record.Title}: ${formatNumber(record.MolecularWeight, 4)} g/mol`;
-    pubchemLink.href = `https://pubchem.ncbi.nlm.nih.gov/compound/${record.CID}`;
-    pubchemLink.textContent = "Open PubChem record";
-    setMolarWeight(record.MolecularWeight);
+    pubchemResult.textContent = `${record.title}: ${formatNumber(record.weight, 4)} g/mol (source: ${record.source})`;
+    if (record.source === "PubChem" && record.cid) {
+      pubchemLink.href = `https://pubchem.ncbi.nlm.nih.gov/compound/${record.cid}`;
+      pubchemLink.textContent = "Open PubChem record";
+    } else {
+      pubchemLink.href = `https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(query)}`;
+      pubchemLink.textContent = "Search PubChem";
+    }
+    setMolarWeight(record.weight);
   } catch (error) {
-    pubchemResult.textContent = "Unable to reach PubChem right now.";
+    pubchemResult.textContent = "Unable to reach PubChem or NCI Cactus. Check your internet connection or try again later.";
+    pubchemLink.href = `https://pubchem.ncbi.nlm.nih.gov/#query=${encodeURIComponent(query)}`;
+    pubchemLink.textContent = "Open PubChem search";
   }
 };
 
@@ -254,30 +298,30 @@ const answerVoiceQuery = async (query) => {
   const name = massQuery?.name || query;
 
   try {
-    const record = await pubchemLookup(name);
+    const record = await lookupMolecularWeight(name);
     if (!record) {
-      voiceStatus.textContent = "No matching compound found on PubChem.";
-      speak("I could not find that compound on PubChem.");
+      voiceStatus.textContent = "No matching compound found on PubChem or NCI Cactus.";
+      speak("I could not find that compound on PubChem or NCI Cactus.");
       return;
     }
-    const molWeight = record.MolecularWeight;
+    const molWeight = record.weight;
 
     if (massQuery) {
       const massInGrams = molWeight;
       const massConverted = massInGrams / unitFactors[massQuery.unitKey];
-      const response = `One mole of ${record.Title} is ${formatNumber(massConverted, 2)} ${massQuery.unitKey}.`;
+      const response = `One mole of ${record.title} is ${formatNumber(massConverted, 2)} ${massQuery.unitKey} (${record.source}).`;
       voiceStatus.textContent = response;
       speak(response);
       return;
     }
 
-    const response = `${record.Title} has a molar weight of ${formatNumber(molWeight, 4)} grams per mole.`;
+    const response = `${record.title} has a molar weight of ${formatNumber(molWeight, 4)} grams per mole (${record.source}).`;
     voiceStatus.textContent = response;
     speak(response);
     setMolarWeight(molWeight);
   } catch (error) {
-    voiceStatus.textContent = "Unable to reach PubChem for that request.";
-    speak("I could not reach PubChem right now.");
+    voiceStatus.textContent = "Unable to reach PubChem or NCI Cactus. Check your internet connection or try again later.";
+    speak("I could not reach PubChem or NCI Cactus. Please check your internet connection and try again.");
   }
 };
 
@@ -403,6 +447,17 @@ const handleMixCalculation = () => {
   mixStatus.textContent = "Master mix calculated.";
 };
 
+const updateTotalVolume = () => {
+  const reactionVolume = parseFloat(reactionVolumeInput.value);
+  const reactionCount = parseFloat(reactionCountInput.value);
+  if (!Number.isFinite(reactionVolume) || !Number.isFinite(reactionCount)) {
+    totalVolumeDisplay.textContent = "Enter reactions and volume per reaction to see total volume.";
+    return;
+  }
+  const totalVolume = reactionVolume * reactionCount;
+  totalVolumeDisplay.textContent = `${formatNumber(totalVolume, 2)} µL total`;
+};
+
 const clearMix = () => {
   reactionVolumeInput.value = "";
   reactionCountInput.value = "";
@@ -410,6 +465,21 @@ const clearMix = () => {
   componentsContainer.innerHTML = "";
   mixResults.innerHTML = "";
   mixStatus.textContent = "";
+  totalVolumeDisplay.textContent = "";
+};
+
+const showTool = (toolId) => {
+  appSelector.classList.add("hidden");
+  toolSections.forEach((section) => {
+    section.classList.toggle("hidden", section.id !== toolId);
+  });
+};
+
+const showSelector = () => {
+  appSelector.classList.remove("hidden");
+  toolSections.forEach((section) => {
+    section.classList.add("hidden");
+  });
 };
 
 molarityCalcButton.addEventListener("click", calculateMolarity);
@@ -438,6 +508,17 @@ voiceStop.addEventListener("click", () => {
 addComponentButton.addEventListener("click", () => addComponentRow());
 mixCalcButton.addEventListener("click", handleMixCalculation);
 mixClearButton.addEventListener("click", clearMix);
+reactionVolumeInput.addEventListener("input", updateTotalVolume);
+reactionCountInput.addEventListener("input", updateTotalVolume);
+
+appCards.forEach((card) => {
+  card.addEventListener("click", () => showTool(card.dataset.target));
+});
+
+backButtons.forEach((button) => {
+  button.addEventListener("click", showSelector);
+});
 
 addComponentRow();
 initSpeechRecognition();
+updateTotalVolume();

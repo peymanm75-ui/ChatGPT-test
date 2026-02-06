@@ -52,6 +52,53 @@ main {
   gap: 2.5rem;
 }
 
+.hidden {
+  display: none;
+}
+
+.app-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.app-card {
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  box-shadow: 0 8px 20px rgba(30, 45, 80, 0.08);
+  color: var(--text);
+}
+
+.app-card strong {
+  display: block;
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+
+.app-icon {
+  font-size: 2.2rem;
+  background: #e8efff;
+  border-radius: 16px;
+  padding: 0.5rem 0.7rem;
+}
+
+.tool-nav {
+  margin-bottom: -0.5rem;
+}
+
 .tool {
   display: flex;
   flex-direction: column;
