@@ -18,30 +18,7 @@
   </header>
 
   <main>
-    <section class="app-selector" id="app-selector">
-      <h2>Choose your LabToolKit tool</h2>
-      <div class="card-grid">
-        <button class="app-card" type="button" data-target="molarity-tool">
-          <span class="app-icon">🧪</span>
-          <span>
-            <strong>Molarity calculator</strong>
-            <span class="muted">Convert between mass, moles, and molar weight.</span>
-          </span>
-        </button>
-        <button class="app-card" type="button" data-target="master-mix-tool">
-          <span class="app-icon">🧬</span>
-          <span>
-            <strong>Master mix calculator</strong>
-            <span class="muted">Plan reagent volumes across many reactions.</span>
-          </span>
-        </button>
-      </div>
-    </section>
-
-    <section class="tool hidden" id="molarity-tool">
-      <div class="tool-nav">
-        <button class="ghost back-button" type="button" data-back>← Back to tools</button>
-      </div>
+    <section class="tool" id="molarity-tool">
       <div class="tool-header">
         <h2>Molarity calculator</h2>
         <p>
@@ -99,7 +76,7 @@
       <div class="card">
         <h3>Molar weight search (PubChem)</h3>
         <p class="muted">
-          Search PubChem (NIH) with a fallback to the NCI Cactus database if PubChem is unavailable.
+          Search PubChem, a comprehensive chemical database maintained by the NIH, for molecular weight.
         </p>
         <div class="field-group inline">
           <input id="pubchem-query" type="text" placeholder="Search by name (e.g., sodium chloride)" />
@@ -122,10 +99,7 @@
       </div>
     </section>
 
-    <section class="tool hidden" id="master-mix-tool">
-      <div class="tool-nav">
-        <button class="ghost back-button" type="button" data-back>← Back to tools</button>
-      </div>
+    <section class="tool" id="master-mix-tool">
       <div class="tool-header">
         <h2>Master mix calculator</h2>
         <p>
@@ -143,10 +117,6 @@
           <label for="reaction-count">Number of reactions</label>
           <input id="reaction-count" type="number" step="1" placeholder="e.g., 24" />
         </div>
-      </div>
-      <div class="card">
-        <p class="muted">Total master mix volume</p>
-        <p id="total-volume" class="status"></p>
       </div>
 
       <div class="card">
